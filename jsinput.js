@@ -6,8 +6,8 @@
   var initialState = {
     url: "",
     courseId: "",
-    SessionStarts: "",
-    SessionEnds: "",
+    sessionStart: "",
+    sessionEnd: "",
     graded: "false",
   };
   var channel;
@@ -17,17 +17,17 @@
     // Function that the current context for the JSInput. This context depends on:
     // * Session datetime (datetime when the session starts)
     // The context includes: message to show
-    var sessionStarts = new Date(initialState.sessionStarts);
-    var sessionEnds = new Date(initialState.sessionEnds);
+    var sessionStart = new Date(initialState.sessionStart);
+    var sessionEnd = new Date(initialState.sessionEnd);
     var currentDate = new Date();
 
-    if (sessionStarts > currentDate) {
+    if (sessionStart > currentDate) {
       // the session has not started
-      infoElement.innerHTML = `La sesión comenzará el ${sessionStarts.getDate()}/${
-        sessionStarts.getMonth() + 1
+      infoElement.innerHTML = `La sesión comenzará el ${sessionStart.getDate()}/${
+        sessionStart.getMonth() + 1
       }
-       a las ${sessionStarts.toLocaleTimeString()}.`;
-    } else if (currentDate < sessionEnds) {
+       a las ${sessionStart.toLocaleTimeString()}.`;
+    } else if (currentDate < sessionEnd) {
       infoElement.innerHTML =
         "La sesión en vivo ya está disponible haz click en el botón para comenzar.";
     } else {

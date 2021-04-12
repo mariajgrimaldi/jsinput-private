@@ -40,10 +40,10 @@ function setupUI() {
       labelElements[index].innerText === "Submit" ||
       labelElements[index].innerText === "Enviar"
     )
-      labelElements[index].innerText = "Open Session";
+      labelElements[index].innerText = "Abrir sesión";
   }
 
-  var dateObject = new Date(initialState.sessionStarts);
+  var dateObject = new Date(initialState.sessionStart);
   var currentDate = new Date();
 
   hideSubmitButton(dateObject > currentDate);
@@ -67,8 +67,10 @@ function getInitialState() {
   initialState = JSON.parse(initialStateJSON);
 
   // Convert string to objects
-  var sessionStartsDate = new Date(initialState.sessionStarts);
-  initialState.sessionStarts = sessionStartsDate;
+  var sessionStartDate = new Date(initialState.sessionStart);
+  var sessionEndDate = new Date(initialState.sessionEnd);
+  initialState.sessionStart = sessionStartDate;
+  initialState.sessionEnd = sessionEndDate;
 }
 
 /**
@@ -76,8 +78,23 @@ function getInitialState() {
  * - Session configuration
  * And sets for the problem: The event that opens URL for Open Session button
  */
-function setProblemContext() {
-  const sessionConfig = getSessionConfig();
+async function setProblemContext() {
+  const sessionConfig = await getSessionConfig();
+  var currentDate = new Date();
+  debugger;
+  // Depending on datetime show meet or recording URL. Hide if session ended
+  var showMeetURL = currentDate > initialState.sessionStart && currentDate < initialState.sessionEnd;
+  if (showMeetURL) {
+    $(".submit.btn-brand")[0].addEventListener("click", function () {
+      window.open(sessionConfig.meetURL, "_blank");
+    });
+  } else {
+    !sessionConfig.recordingURL
+      ? hideSubmitButton(true)
+      : $(".submit.btn-brand")[0].addEventListener("click", function () {
+          window.open(sessionConfig.recordingURL, "_blank");
+        });
+  }
 }
 
 // Helper functions.
@@ -93,14 +110,14 @@ async function getSessionConfig() {
 
   // We must search for the correct URL given the cohort, courseID and session datetime,
 
+  debugger;
   // 1. Find rows with matching cohort.
-  sessionConfigObjects["cohortsArray"].forEach((element, index) => {
-    if (element[0] === userCohort.cohort_name) {
+  sessionConfigObjects["cohortArray"].forEach((element, index) => {
+    if (element[0].toLowerCase() === userCohort.cohort_name.toLowerCase()) {
       filteredPositions.push(index);
     }
   });
 
-  debugger;
   // 2. Find rows with matching courseID.
   filteredPositions = filteredPositions.filter(
     (index) =>
@@ -110,14 +127,24 @@ async function getSessionConfig() {
   // 3. Find rows with matching session datetime.
   filteredPositions = filteredPositions.filter(
     (index) =>
-      new Date(sessionConfigObjects["sessionStartsArray"][index][0]) -
-        initialState.sessionStarts ===
+      new Date(sessionConfigObjects["sessionStartDateArray"][index][0]) -
+        initialState.sessionStart ===
       0
   );
 
+  if (filteredPositions.length !== 0)
+    return {
+      meetURL: sessionConfigObjects.meetURLArray[filteredPositions[0]][0],
+      recordingURL:
+        sessionConfigObjects.recordingURLArray[filteredPositions[0]][0],
+    };
+
+  console.warn(
+    "Configuration from Google spreadsheet missing for JSInput."
+  );
   return {
-    meetURL: sessionConfigObjects.meetURLsArray[filteredPositions[0]],
-    recordingURL: sessionConfigObjects.recordingURLsArray[filteredPositions[0]],
+    meetURL: null,
+    recordingURL: null,
   };
 }
 
@@ -125,7 +152,6 @@ async function getSessionConfig() {
  *  Function used to get columns used for configuration.
  */
 function getSessionFromGoogle() {
-  debugger;
   return gapi.client.sheets.spreadsheets.values
     .batchGet({
       spreadsheetId: SPREADSHEET_ID,
@@ -133,17 +159,45 @@ function getSessionFromGoogle() {
     })
     .then(
       function (response) {
-        debugger;
-        sessionConfigObjects["courseIDArray"] =
-          response.result.valueRanges[0].values;
-        sessionConfigObjects["cohortsArray"] =
-          response.result.valueRanges[1].values;
-        sessionConfigObjects["meetURLsArray"] =
-          response.result.valueRanges[2].values;
-        sessionConfigObjects["recordingURLsArray"] =
-          response.result.valueRanges[3].values;
-        sessionConfigObjects["sessionStartsArray"] =
-          response.result.valueRanges[4].values;
+        var courseIDs = response.result.valueRanges[0];
+        var cohorts = response.result.valueRanges[1];
+        var meetURLs = response.result.valueRanges[2];
+        var recordingURLs = response.result.valueRanges[3];
+        var sessionStartDates = response.result.valueRanges[4];
+
+        if (
+          typeof courseIDs.values !== "undefined" &&
+          courseIDs.values.length > 0
+        )
+          sessionConfigObjects["courseIDArray"] = courseIDs.values;
+        else sessionConfigObjects["courseIDArray"] = [];
+
+        if (typeof cohorts.values !== "undefined" && cohorts.values.length > 0)
+          sessionConfigObjects["cohortArray"] = cohorts.values;
+        else sessionConfigObjects["cohortArray"] = [];
+
+        if (
+          typeof meetURLs.values !== "undefined" &&
+          meetURLs.values.length > 0
+        )
+          sessionConfigObjects["meetURLArray"] = meetURLs.values;
+        else sessionConfigObjects["meetURLArray"] = [];
+
+        if (
+          typeof recordingURLs.values !== "undefined" &&
+          recordingURLs.values.length > 0
+        )
+          sessionConfigObjects["recordingURLArray"] = recordingURLs.values;
+        else sessionConfigObjects["recordingURLArray"] = [];
+
+        if (
+          typeof sessionStartDates.values !== "undefined" &&
+          sessionStartDates.values.length > 0
+        )
+          sessionConfigObjects["sessionStartDateArray"] =
+            sessionStartDates.values;
+        else sessionConfigObjects["sessionStartDateArray"] = [];
+
         setProblemContext();
       },
       function (response) {
@@ -165,7 +219,6 @@ function prepareGoogleClient() {
  *  Function that loads dynamically <script src="https://apis.google.com/js/api.js"></script>
  */
 function loadGoogleAPIScript() {
-  debugger;
   return $.getScript("https://apis.google.com/js/api.js");
 }
 
@@ -174,7 +227,6 @@ function loadGoogleAPIScript() {
  *  listeners.
  */
 function handleClientLoad() {
-  debugger;
   gapi.load("client:auth2", initClient);
 }
 
@@ -182,7 +234,6 @@ function handleClientLoad() {
  *  Function that initialize google client.
  */
 function initClient() {
-  debugger;
   gapi.client
     .init({
       apiKey: API_KEY,
