@@ -43,11 +43,18 @@ function setupUI() {
       labelElements[index].innerText = "Open Session";
   }
 
-  var dateObject = new Date(initialState.SessionDatetime);
+  var dateObject = new Date(initialState.sessionStarts);
   var currentDate = new Date();
-  Math.sign(dateObject - currentDate) === 1
-    ? (document.getElementsByClassName("submit btn-brand")[0].hidden = true)
-    : null;
+
+  hideSubmitButton(dateObject > currentDate);
+}
+
+/**
+ *  Function that given a condition hides the submit button.
+ */
+function hideSubmitButton(condition) {
+  if (condition)
+    $(".submit.btn-brand").hide()
 }
 
 /**
@@ -58,7 +65,8 @@ function getInitialState() {
   var jsinput = document.getElementsByClassName("jsinput")[0];
   var initialStateJSON = jsinput.getAttribute("data-initial-state");
   initialState = JSON.parse(initialStateJSON);
-  debugger;
+
+  // Convert string to objects
   var sessionStartsDate = new Date(initialState.sessionStarts);
   initialState.sessionStarts = sessionStartsDate;
 }
