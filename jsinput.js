@@ -4,7 +4,6 @@
   "use strict";
 
   var initialState = {
-    url: "",
     courseId: "",
     sessionStart: "",
     sessionEnd: "",

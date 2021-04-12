@@ -33,7 +33,6 @@ var SCOPES = "https://www.googleapis.com/auth/spreadsheets.readonly";
  * - Hide the submit button when session has not started.
  */
 function setupUI() {
-  // FALTA UN CASO: AUN NO ESTA DISPONIBLE LA GRABACION hacer funcion de hide button
   var labelElements = document.getElementsByClassName("submit-label");
   for (index in labelElements) {
     if (
@@ -81,7 +80,6 @@ function getInitialState() {
 async function setProblemContext() {
   const sessionConfig = await getSessionConfig();
   var currentDate = new Date();
-  debugger;
   // Depending on datetime show meet or recording URL. Hide if session ended
   var showMeetURL = currentDate > initialState.sessionStart && currentDate < initialState.sessionEnd;
   if (showMeetURL) {
@@ -110,7 +108,6 @@ async function getSessionConfig() {
 
   // We must search for the correct URL given the cohort, courseID and session datetime,
 
-  debugger;
   // 1. Find rows with matching cohort.
   sessionConfigObjects["cohortArray"].forEach((element, index) => {
     if (element[0].toLowerCase() === userCohort.cohort_name.toLowerCase()) {
@@ -131,7 +128,6 @@ async function getSessionConfig() {
         initialState.sessionStart ===
       0
   );
-
   if (filteredPositions.length !== 0)
     return {
       meetURL: sessionConfigObjects.meetURLArray[filteredPositions[0]][0], // HANDLE ERRORS
