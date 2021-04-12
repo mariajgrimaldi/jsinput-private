@@ -17,8 +17,8 @@
     // Function that the current context for the JSInput. This context depends on:
     // * Session datetime (datetime when the session starts)
     // The context includes: message to show
-    var sessionStarts = new Date(initialState.SessionStarts);
-    var sessionEnds = new Date(initialState.SessionEnds);
+    var sessionStarts = new Date(initialState.sessionStarts);
+    var sessionEnds = new Date(initialState.sessionEnds);
     var currentDate = new Date();
 
     if (sessionStarts > currentDate) {
@@ -26,7 +26,7 @@
       infoElement.innerHTML = `La sesión comenzará el ${sessionStarts.getDate()}/${
         sessionStarts.getMonth() + 1
       }
-       a las ${sessionStarts.getHours()}:${sessionStarts.getMinutes()}.`;
+       a las ${sessionStarts.toLocaleTimeString()}.`;
     } else if (currentDate < sessionEnds) {
       infoElement.innerHTML =
         "La sesión en vivo ya está disponible haz click en el botón para comenzar.";
