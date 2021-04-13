@@ -52,8 +52,7 @@ function setupUI() {
  *  Function that given a condition hides the submit button.
  */
 function hideSubmitButton(condition) {
-  if (condition)
-    $(".submit.btn-brand").hide()
+  if (condition) $(".submit.btn-brand").hide();
 }
 
 /**
@@ -81,7 +80,9 @@ async function setProblemContext() {
   const sessionConfig = await getSessionConfig();
   var currentDate = new Date();
   // Depending on datetime show meet or recording URL. Hide if session ended
-  var showMeetURL = currentDate > initialState.sessionStart && currentDate < initialState.sessionEnd;
+  var showMeetURL =
+    currentDate > initialState.sessionStart &&
+    currentDate < initialState.sessionEnd;
   if (showMeetURL) {
     $(".submit.btn-brand")[0].addEventListener("click", function () {
       window.open(sessionConfig.meetURL, "_blank");
@@ -130,14 +131,12 @@ async function getSessionConfig() {
   );
   if (filteredPositions.length !== 0)
     return {
-      meetURL: sessionConfigObjects.meetURLArray[filteredPositions[0]][0], // HANDLE ERRORS
+      meetURL: sessionConfigObjects.meetURLArray[filteredPositions[0]][0],
       recordingURL:
         sessionConfigObjects.recordingURLArray[filteredPositions[0]][0],
     };
 
-  console.warn(
-    "Configuration from Google spreadsheet missing for JSInput."
-  );
+  console.warn("Configuration from Google spreadsheet missing for JSInput.");
   return {
     meetURL: null,
     recordingURL: null,
@@ -247,16 +246,15 @@ function initClient() {
  */
 function getUserCohort() {
   var data = document.getElementById("user-metadata");
-
   if (!data) return null;
 
-  var username = JSON.parse(data.innerHTML).username;
   var courseIdSafe = encodeURIComponent(initialState.courseId);
   return fetch(
-    `${window.location.origin}/${eoxCoreCohort}/?course_id=${courseIdSafe}&amp;username=${username}`
+    `${window.location.origin}/${eoxCoreCohort}/?course_id=${courseIdSafe}`
   )
-    .then(function (data) {
-      return data.json();
+    .then(function (response) {
+      if (!response.ok) throw Error(response.statusText);
+      return response.json();
     })
     .then(function (response) {
       return response;
