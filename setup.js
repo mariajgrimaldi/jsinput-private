@@ -3,9 +3,9 @@
  */
 
 // SETUP VARIABLES
+var userCohort;
 var initialState = {};
 var sessionConfigObjects = {};
-var eoxCoreCohort = "eox-core/api/v1/cohort";
 
 // Spreadsheet information. Please, modify this.
 var SPREADSHEET_ID = "1a4pXCKJlLjQ14_aMbLcjGG8pmd0QPYQmSGZ49IrE-u4";
@@ -77,7 +77,7 @@ function getInitialState() {
  * And sets for the problem: The event that opens URL for Open Session button
  */
 async function setProblemContext() {
-  const sessionConfig = await getSessionConfig();
+  var sessionConfig = await getSessionConfig();
   var currentDate = new Date();
   // Depending on datetime show meet or recording URL. Hide if session ended
   var showMeetURL =
@@ -102,7 +102,6 @@ async function setProblemContext() {
  *  Function used to get meet session configuration from SPREADSHEET_ID.
  */
 async function getSessionConfig() {
-  var userCohort = await getUserCohort();
   var filteredPositions = [];
 
   if (!userCohort) return {};
@@ -111,7 +110,7 @@ async function getSessionConfig() {
 
   // 1. Find rows with matching cohort.
   sessionConfigObjects["cohortArray"].forEach((element, index) => {
-    if (element[0].toLowerCase() === userCohort.cohort_name.toLowerCase()) {
+    if (element[0].toLowerCase() === userCohort.toLowerCase()) {
       filteredPositions.push(index);
     }
   });
@@ -241,29 +240,9 @@ function initClient() {
     });
 }
 
-/**
- *  Function used to get the current user cohort.
- */
-function getUserCohort() {
-  var data = document.getElementById("user-metadata");
-  if (!data) return null;
-
-  var courseIdSafe = encodeURIComponent(initialState.courseId);
-  return fetch(
-    `${window.location.origin}/${eoxCoreCohort}/?course_id=${courseIdSafe}`
-  )
-    .then(function (response) {
-      if (!response.ok) throw Error(response.statusText);
-      return response.json();
-    })
-    .then(function (response) {
-      return response;
-    })
-    .catch(function (error) {
-      console.warn(error);
-    });
-}
-
-prepareGoogleClient();
-getInitialState();
-setupUI();
+document.addEventListener("cohort_obtained", (event) => {
+  userCohort = event.detail.cohort_name;
+  prepareGoogleClient();
+  getInitialState();
+  setupUI();
+});
